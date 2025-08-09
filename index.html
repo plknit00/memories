@@ -11,27 +11,29 @@
       padding: 0 20px 40px 20px;
     }
     #introText {
-      max-width: 700px;
-      margin: 0 auto 20px auto;
-      padding: 15px 20px;
-      background: #fff8dc;
-      border-radius: 8px;
-      box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
-      font-size: 1.1rem;
-      color: #4a4a4a;
-      text-align: center;
+    max-width: 700px;
+    margin: 20px auto;
+    padding: 15px 20px;
+    background: #fff8dc;
+    border-radius: 8px;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
+    font-size: 1.1rem;
+    color: #4a4a4a;
+    text-align: center;
     }
+    /* Updated memories container to use CSS grid for 3x3 layout */
     #memoriesContainer {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
       gap: 15px;
       max-width: 1000px;
       margin: 0 auto;
+      justify-items: center;
     }
     .memory {
       background: #fff8dc;
-      width: 200px;
+      width: 100%;
+      max-width: 300px;
       padding: 10px;
       box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
       border-radius: 8px;
@@ -41,6 +43,8 @@
       flex-direction: column;
       align-items: center;
       text-align: center;
+      box-sizing: border-box;
+      min-height: 150px;
     }
     .memory img {
       max-width: 100%;
@@ -48,6 +52,8 @@
       margin-top: 8px;
       cursor: pointer;
       transition: transform 0.2s ease;
+      max-height: 120px;
+      object-fit: contain;
     }
     .memory img:hover {
       transform: scale(1.05);

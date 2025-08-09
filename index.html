@@ -1,57 +1,99 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
-<meta charset="UTF-8" />
-<title>Memories with Lightbox</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f0e6d6;
-    display: flex;
-    flex-wrap: wrap;
-    padding: 20px;
-    justify-content: center;
-  }
-  .memory {
-    background: #fff8dc;
-    padding: 10px;
-    margin: 10px;
-    width: 200px;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-    border-radius: 8px;
-    word-wrap: break-word;
-    cursor: default;
-  }
-  .memory img {
-    max-width: 100%;
-    border-radius: 6px;
-    margin-top: 8px;
-    cursor: pointer;
-    transition: transform 0.2s ease;
-  }
-  .memory img:hover {
-    transform: scale(1.05);
-  }
-  /* Lightbox styles */
-  #lightboxOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right:0;
-    bottom: 0;
-    background: rgba(0,0,0,0.8);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  }
-  #lightboxOverlay img {
-    max-width: 90vw;
-    max-height: 90vh;
-    border-radius: 10px;
-    box-shadow: 0 0 15px black;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <title>My Memories</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #99f0ff;
+      margin: 20px;
+      padding: 0 20px 40px 20px;
+    }
+    #introText {
+      max-width: 700px;
+      margin: 0 auto 20px auto;
+      padding: 15px 20px;
+      background: #fff8dc;
+      border-radius: 8px;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
+      font-size: 1.1rem;
+      color: #4a4a4a;
+      text-align: center;
+    }
+    #memoriesContainer {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .memory {
+      background: #fff8dc;
+      width: 200px;
+      padding: 10px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+      border-radius: 8px;
+      word-wrap: break-word;
+      cursor: default;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .memory img {
+      max-width: 100%;
+      border-radius: 6px;
+      margin-top: 8px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .memory img:hover {
+      transform: scale(1.05);
+    }
+    #buttonsBar {
+      max-width: 700px;
+      margin: 20px auto 40px auto;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 1rem;
+      background-color: #028ea8;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      cursor: pointer;
+      box-shadow: 1px 2px 4px rgba(0,0,0,0.3);
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #004e5c;
+    }
+
+    /* Lightbox styles */
+    #lightboxOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right:0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    #lightboxOverlay img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border-radius: 10px;
+      box-shadow: 0 0 15px black;
+    }
+  </style>
 </head>
 <body>
 
@@ -59,37 +101,43 @@
   <img id="lightboxImage" src="" alt="Memory full size" />
 </div>
 
+<!-- Intro text block -->
+<div id="introText">
+  <p>Welcome to our special memories page! Here you can revisit moments we cherish and add new ones anytime.</p>
+</div>
+
+<!-- Buttons -->
+<div id="buttonsBar">
+  <button id="scrambleBtn">Scramble Memories</button>
+  <button id="addMemoryBtn">Add Memory</button>
+</div>
+
+<!-- Container for memories -->
+<div id="memoriesContainer"></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <script>
-async function loadMemories() {
-  try {
-    const res = await fetch('memories.txt');
-    let encryptedData = "";
-    if (res.ok) {
-      encryptedData = await res.text();
-    } else {
-      alert("No memories found yet. Please add some!");
-      return;
+  let allMemories = [];
+  let currentDisplayed = [];
+
+  function shuffleArray(arr) {
+    // Fisher-Yates shuffle
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
     }
+  }
 
-    if (!encryptedData.trim()) {
-      alert("No memories found yet. Please add some!");
-      return;
-    }
+  function pickRandomMemories(arr, count) {
+    if (arr.length <= count) return [...arr];
+    const copy = [...arr];
+    shuffleArray(copy);
+    return copy.slice(0, count);
+  }
 
-    const password = prompt("Enter password:");
-    if (!password) return;
-
-    const bytes = CryptoJS.AES.decrypt(encryptedData, password);
-    const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
-
-    if (!decryptedStr) {
-      alert("Wrong password or corrupted file.");
-      return;
-    }
-
-    const memories = JSON.parse(decryptedStr);
-
+  function renderMemories(memories) {
+    const container = document.getElementById('memoriesContainer');
+    container.innerHTML = '';
     memories.forEach(m => {
       const div = document.createElement('div');
       div.className = 'memory';
@@ -109,28 +157,72 @@ async function loadMemories() {
         div.appendChild(img);
       }
 
-      document.body.appendChild(div);
+      container.appendChild(div);
     });
-  } catch (err) {
-    alert("Error loading memories.");
-    console.error(err);
   }
-}
 
-function openLightbox(src) {
-  const overlay = document.getElementById('lightboxOverlay');
-  const lightboxImg = document.getElementById('lightboxImage');
-  lightboxImg.src = src;
-  overlay.style.display = 'flex';
-}
+  async function loadMemories() {
+    try {
+      const res = await fetch('memories.txt');
+      let encryptedData = "";
+      if (res.ok) {
+        encryptedData = await res.text();
+      } else {
+        alert("No memories found yet. Please add some!");
+        return;
+      }
 
-function closeLightbox() {
-  const overlay = document.getElementById('lightboxOverlay');
-  overlay.style.display = 'none';
-  document.getElementById('lightboxImage').src = '';
-}
+      if (!encryptedData.trim()) {
+        alert("No memories found yet. Please add some!");
+        return;
+      }
 
-loadMemories();
+      const password = prompt("Enter password:");
+      if (!password) return;
+
+      const bytes = CryptoJS.AES.decrypt(encryptedData, password);
+      const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+
+      if (!decryptedStr) {
+        alert("Wrong password or corrupted file.");
+        return;
+      }
+
+      allMemories = JSON.parse(decryptedStr);
+      currentDisplayed = pickRandomMemories(allMemories, 9);
+      renderMemories(currentDisplayed);
+
+    } catch (err) {
+      alert("Error loading memories.");
+      console.error(err);
+    }
+  }
+
+  function openLightbox(src) {
+    const overlay = document.getElementById('lightboxOverlay');
+    const lightboxImg = document.getElementById('lightboxImage');
+    lightboxImg.src = src;
+    overlay.style.display = 'flex';
+  }
+
+  function closeLightbox() {
+    const overlay = document.getElementById('lightboxOverlay');
+    overlay.style.display = 'none';
+    document.getElementById('lightboxImage').src = '';
+  }
+
+  // Button handlers
+  document.getElementById('scrambleBtn').addEventListener('click', () => {
+    if (allMemories.length <= 9) return; // no need to scramble
+    currentDisplayed = pickRandomMemories(allMemories, 9);
+    renderMemories(currentDisplayed);
+  });
+
+  document.getElementById('addMemoryBtn').addEventListener('click', () => {
+    window.location.href = 'add-memory.html';
+  });
+
+  loadMemories();
 </script>
 
 </body>

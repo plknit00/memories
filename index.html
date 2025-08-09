@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Memories with Lightbox</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0e6d6;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 20px;
+    justify-content: center;
+  }
+  .memory {
+    background: #fff8dc;
+    padding: 10px;
+    margin: 10px;
+    width: 200px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    border-radius: 8px;
+    word-wrap: break-word;
+    cursor: default;
+  }
+  .memory img {
+    max-width: 100%;
+    border-radius: 6px;
+    margin-top: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  .memory img:hover {
+    transform: scale(1.05);
+  }
+  /* Lightbox styles */
+  #lightboxOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right:0;
+    bottom: 0;
+    background: rgba(0,0,0,0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+  #lightboxOverlay img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 10px;
+    box-shadow: 0 0 15px black;
+  }
+</style>
+</head>
+<body>
+
+<div id="lightboxOverlay" onclick="closeLightbox()">
+  <img id="lightboxImage" src="" alt="Memory full size" />
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script>
+async function loadMemories() {
+  const password = prompt("Enter password:");
+  if (!password) return;
+
+  try {
+    const res = await fetch('memories.txt');
+    if (!res.ok) throw new Error("memories.txt not found");
+    const encryptedData = await res.text();
+
+    const bytes = CryptoJS.AES.decrypt(encryptedData, password);
+    const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+
+    if (!decryptedStr) {
+      alert("Wrong password or corrupted file.");
+      return;
+    }
+
+    const memories = JSON.parse(decryptedStr);
+
+    memories.forEach(m => {
+      const div = document.createElement('div');
+      div.className = 'memory';
+
+      const textDiv = document.createElement('div');
+      textDiv.textContent = m.text;
+      div.appendChild(textDiv);
+
+      if (m.image) {
+        const img = document.createElement('img');
+        img.src = m.image;
+        img.alt = "Memory image";
+        img.onclick = (e) => {
+          e.stopPropagation();
+          openLightbox(m.image);
+        };
+        div.appendChild(img);
+      }
+
+      document.body.appendChild(div);
+    });
+  } catch (err) {
+    alert("Error loading memories. Check console for details.");
+    console.error(err);
+  }
+}
+
+function openLightbox(src) {
+  const overlay = document.getElementById('lightboxOverlay');
+  const lightboxImg = document.getElementById('lightboxImage');
+  lightboxImg.src = src;
+  overlay.style.display = 'flex';
+}
+
+function closeLightbox() {
+  const overlay = document.getElementById('lightboxOverlay');
+  overlay.style.display = 'none';
+  document.getElementById('lightboxImage').src = '';
+}
+
+loadMemories();
+</script>
+
+</body>
+</html>

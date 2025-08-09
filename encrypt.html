@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Add Memory (With Password Change)</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 500px;
+    margin: auto;
+    padding: 20px;
+  }
+  input, textarea {
+    width: 100%;
+    margin: 8px 0;
+    padding: 8px;
+  }
+  button {
+    padding: 10px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  pre {
+    background: #f4f4f4;
+    padding: 10px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+</style>
+</head>
+<body>
+
+<h2>Add a New Memory</h2>
+
+<label>Old Password (to decrypt existing memories):</label>
+<input type="password" id="oldPassword" placeholder="Enter old password">
+
+<label>New Password (to encrypt updated memories):</label>
+<input type="password" id="newPassword" placeholder="Enter new password">
+
+<label>Memory Text:</label>
+<textarea id="memoryText" placeholder="Enter your memory"></textarea>
+
+<label>Image URL (optional):</label>
+<input type="url" id="memoryImage" placeholder="https://example.com/photo.jpg">
+
+<button onclick="addMemory()">Add Memory & Re-encrypt</button>
+
+<h3>Updated Encrypted Data:</h3>
+<pre id="output"></pre>
+
+<!-- CryptoJS Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script>
+async function addMemory() {
+  const oldPassword = document.getElementById('oldPassword').value;
+  const newPassword = document.getElementById('newPassword').value;
+  const text = document.getElementById('memoryText').value.trim();
+  const image = document.getElementById('memoryImage').value.trim();
+  const output = document.getElementById('output');
+
+  if (!oldPassword || !newPassword || !text) {
+    alert("Old password, new password, and memory text are required.");
+    return;
+  }
+
+  try {
+    // Fetch encrypted memories file
+    const res = await fetch('memories.txt');
+    const encryptedData = await res.text();
+
+    // Decrypt with old password
+    const bytes = CryptoJS.AES.decrypt(encryptedData, oldPassword);
+    const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+    if (!decryptedStr) {
+      alert("Old password incorrect or file corrupted.");
+      return;
+    }
+    let memories = JSON.parse(decryptedStr);
+
+    // Add new memory
+    const newMemory = { text };
+    if (image) newMemory.image = image;
+    memories.push(newMemory);
+
+    // Encrypt with new password
+    const newEncrypted = CryptoJS.AES.encrypt(JSON.stringify(memories), newPassword).toString();
+
+    // Show new encrypted output for manual update
+    output.textContent = newEncrypted;
+    alert("Memory added! Copy the above encrypted text into memories.txt");
+
+  } catch (err) {
+    console.error(err);
+    alert("Error decrypting or processing memories.");
+  }
+}
+</script>
+</body>
+</html>

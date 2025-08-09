@@ -1,33 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Add Memory</title>
+<meta charset="UTF-8" />
+<title>Add Memory (Works if memories.txt empty or missing)</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        max-width: 500px;
-        margin: auto;
-        padding: 20px;
-    }
-    input, textarea {
-        width: 100%;
-        margin: 8px 0;
-        padding: 8px;
-    }
-    button {
-        padding: 10px;
-        background: #4CAF50;
-        color: white;
-        border: none;
-        cursor: pointer;
-    }
-    pre {
-        background: #f4f4f4;
-        padding: 10px;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 500px;
+    margin: auto;
+    padding: 20px;
+  }
+  input, textarea {
+    width: 100%;
+    margin: 8px 0;
+    padding: 8px;
+    box-sizing: border-box;
+  }
+  button {
+    padding: 10px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  pre {
+    background: #f4f4f4;
+    padding: 10px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 250px;
+    overflow-y: auto;
+  }
+  label {
+    font-weight: bold;
+  }
 </style>
 </head>
 <body>
@@ -35,7 +41,7 @@
 <h2>Add a New Memory</h2>
 
 <label>Password:</label>
-<input type="password" id="password" placeholder="Enter password">
+<input type="password" id="password" placeholder="Enter your password">
 
 <label>Memory Text:</label>
 <textarea id="memoryText" placeholder="Enter your memory"></textarea>
@@ -43,7 +49,7 @@
 <label>Image URL (optional):</label>
 <input type="url" id="memoryImage" placeholder="https://example.com/photo.jpg">
 
-<button onclick="addMemory()">Add Memory</button>
+<button onclick="addMemory()">Add Memory & Re-encrypt</button>
 
 <h3>Updated Encrypted Data:</h3>
 <pre id="output"></pre>
@@ -52,43 +58,64 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <script>
 async function addMemory() {
-    const password = document.getElementById('password').value;
-    const text = document.getElementById('memoryText').value.trim();
-    const image = document.getElementById('memoryImage').value.trim();
-    const output = document.getElementById('output');
+  const password = document.getElementById('password').value;
+  const text = document.getElementById('memoryText').value.trim();
+  const image = document.getElementById('memoryImage').value.trim();
+  const output = document.getElementById('output');
 
-    if (!password || !text) {
-        alert("Password and memory text are required.");
-        return;
-    }
+  if (!password || !text) {
+    alert("Password and memory text are required.");
+    return;
+  }
 
-    try {
-        // Fetch existing encrypted data
-        const res = await fetch('memories.txt');
-        const encryptedData = await res.text();
+  try {
+    const res = await fetch('memories.txt');
+    let memories = [];
 
-        // Decrypt
+    if (res.ok) {
+      const encryptedData = await res.text();
+      console.log("Encrypted data fetched:", JSON.stringify(encryptedData));
+
+      if (encryptedData.trim().length > 0) {
+        // Try decrypting
         const bytes = CryptoJS.AES.decrypt(encryptedData, password);
-        let memories = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+        const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+        console.log("Decrypted string:", decryptedStr);
 
-        // Add new memory
-        const newMemory = { text: text };
-        if (image) newMemory.image = image;
-        memories.push(newMemory);
-
-        // Re-encrypt
-        const newEncrypted = CryptoJS.AES.encrypt(JSON.stringify(memories), password).toString();
-
-        // Show output for manual update
-        output.textContent = newEncrypted;
-
-        alert("Memory added! Copy the above encrypted text into memories.txt");
-
-    } catch (err) {
-        console.error(err);
-        alert("Error decrypting. Check password or file format.");
+        if (!decryptedStr) {
+          alert("Password incorrect or file corrupted.");
+          return;
+        }
+        try {
+          memories = JSON.parse(decryptedStr);
+        } catch (jsonErr) {
+          console.error("JSON parse error:", jsonErr);
+          alert("Decrypted data is not valid JSON.");
+          return;
+        }
+      } else {
+        console.log("memories.txt is empty, starting fresh.");
+      }
+    } else {
+      console.log("memories.txt not found, starting fresh.");
     }
+
+    // Add new memory
+    const newMemory = { text };
+    if (image) newMemory.image = image;
+    memories.push(newMemory);
+
+    const newEncrypted = CryptoJS.AES.encrypt(JSON.stringify(memories), password).toString();
+
+    output.textContent = newEncrypted;
+    alert("Memory added! Copy the above encrypted text into memories.txt");
+
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    alert("Error decrypting or processing memories.");
+  }
 }
+
 </script>
 </body>
 </html>

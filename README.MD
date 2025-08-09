@@ -63,3 +63,33 @@ Open memories.txt in a text editor and replace its contents with the copied encr
 
 Reload the main page (index.html), enter your password, and your memories should display.
 ```
+
+## Additional Details and Notes
+
+- **Password:** The password you enter is the encryption key. Keep it safe and consistent, or you won’t be able to decrypt your memories.
+
+- **Encrypted File:** `memories.txt` must only contain the encrypted string — no extra spaces or blank lines.
+
+- **Batch Adds:** The add-memory page supports adding multiple memories at once.
+
+- **Display:** The main page shows 9 memories at a time in a neat 3x3 grid. You can shuffle (“Scramble Memories”) to see different memories if you have more than 9.
+
+- **Images:** You can include optional image URLs for memories. Images show below the text and can be clicked for a larger view.
+
+- **Local Server:** You must serve the files over HTTP (not `file://`) because browser security blocks `fetch()` from local files.
+
+---
+
+## Hosting on GitHub Pages
+
+- GitHub Pages only supports static files (HTML, CSS, JS).
+
+- All encryption/decryption happens in your browser — no server-side code.
+
+- Commit the encrypted `memories.txt` file to your repo (do **NOT** commit or share your password).
+
+- Access your site at:
+
+https://<your-github-username>.github.io/<repo-name>/index.html
+
+- Remember to update `memories.txt` with your encrypted data whenever you add memories.

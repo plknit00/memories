@@ -62,13 +62,23 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <script>
 async function loadMemories() {
-  const password = prompt("Enter password:");
-  if (!password) return;
-
   try {
     const res = await fetch('memories.txt');
-    if (!res.ok) throw new Error("memories.txt not found");
-    const encryptedData = await res.text();
+    let encryptedData = "";
+    if (res.ok) {
+      encryptedData = await res.text();
+    } else {
+      alert("No memories found yet. Please add some!");
+      return;
+    }
+
+    if (!encryptedData.trim()) {
+      alert("No memories found yet. Please add some!");
+      return;
+    }
+
+    const password = prompt("Enter password:");
+    if (!password) return;
 
     const bytes = CryptoJS.AES.decrypt(encryptedData, password);
     const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
@@ -102,7 +112,7 @@ async function loadMemories() {
       document.body.appendChild(div);
     });
   } catch (err) {
-    alert("Error loading memories. Check console for details.");
+    alert("Error loading memories.");
     console.error(err);
   }
 }

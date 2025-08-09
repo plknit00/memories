@@ -35,42 +35,38 @@ If you have Python installed, open a terminal/command prompt, navigate to your p
 ```bash
 python3 -m http.server 8000
 
-## 3. Access the Website
+## Access the Website
 
-Open your web browser and go to:
+- Open your web browser and go to:
 
 http://localhost:8000/index.html
 
 
+- The page will prompt you to enter your password to decrypt and view memories.
 
-The page will prompt you to enter your password to decrypt and view memories.
-
-If `memories.txt` is empty or missing, you will get a notification to add some memories.
+- If `memories.txt` is empty or missing, you will get a notification to add some memories.
 
 ---
 
-## 4. Add Memories
+## Add Memories
 
-On the main page, click the **Add Memory** button, or open directly:
-
-
+- On the main page, click the **Add Memory** button, or open directly:
 
 http://localhost:8000/add-memory.html
 
+- Enter your password and the memory texts you want to add. You can also optionally add image URLs per memory.
 
-Enter your password and the memory texts you want to add. You can also optionally add image URLs per memory.
+- Click **Add Memories & Re-encrypt**.
 
-Click **Add Memories & Re-encrypt**.
+- The page will generate an encrypted string representing all your memories.
 
-The page will generate an encrypted string representing all your memories.
+- Copy the encrypted string.
 
-Copy the encrypted string.
+- Open `memories.txt` in a text editor and replace its contents with the copied encrypted string. Save the file.
 
-Open `memories.txt` in a text editor and replace its contents with the copied encrypted string. Save the file.
+- Reload the main page (`index.html`), enter your password, and your memories should display.
 
-Reload the main page (`index.html`), enter your password, and your memories should display.
-
-```
+---
 
 ## Additional Details and Notes
 
@@ -101,3 +97,4 @@ Reload the main page (`index.html`), enter your password, and your memories shou
 https://<your-github-username>.github.io/<repo-name>/index.html
 
 - Remember to update `memories.txt` with your encrypted data whenever you add memories.
+```

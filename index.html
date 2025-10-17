@@ -22,35 +22,25 @@
       text-align: center;
     }
     #memoriesContainer {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
       gap: 15px;
       max-width: 1000px;
       margin: 0 auto;
     }
     .memory {
       background: #fff8dc;
-      width: 200px;
+      width: 100%;
+      min-height: 180px;
       padding: 10px;
       box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
       border-radius: 8px;
-      word-wrap: break-word;
-      cursor: default;
       display: flex;
       flex-direction: column;
       align-items: center;
       text-align: center;
-    }
-    .memory img {
-      max-width: 100%;
-      border-radius: 6px;
-      margin-top: 8px;
-      cursor: pointer;
-      transition: transform 0.2s ease;
-    }
-    .memory img:hover {
-      transform: scale(1.05);
+      word-wrap: break-word;
+      overflow-wrap: break-word;
     }
     #buttonsBar {
       max-width: 700px;
@@ -73,42 +63,22 @@
     button:hover {
       background-color: #004e5c;
     }
-    #lightboxOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right:0;
-      bottom: 0;
-      background: rgba(0,0,0,0.8);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-    #lightboxOverlay img {
-      max-width: 90vw;
-      max-height: 90vh;
-      border-radius: 10px;
-      box-shadow: 0 0 15px black;
-    }
   </style>
 </head>
 <body>
 
-<div id="lightboxOverlay" onclick="closeLightbox()">
-  <img id="lightboxImage" src="" alt="Memory full size" />
-</div>
-
+<!-- Intro text block -->
 <div id="introText">
-  <p>Welcome to our shared memories page! Here they can be remembered for as long as we like.</p>
+  <p>Welcome to our special memories page! Here you can revisit moments we cherish and add new ones anytime.</p>
 </div>
 
+<!-- Buttons -->
 <div id="buttonsBar">
   <button id="scrambleBtn">Scramble Memories</button>
   <button id="addMemoryBtn">Add Memory</button>
-  <button id="viewAllBtn">View All Memories</button>
 </div>
 
+<!-- Container for memories -->
 <div id="memoriesContainer"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -136,19 +106,7 @@
     memories.forEach(m => {
       const div = document.createElement('div');
       div.className = 'memory';
-      const textDiv = document.createElement('div');
-      textDiv.textContent = m.text;
-      div.appendChild(textDiv);
-      if (m.image) {
-        const img = document.createElement('img');
-        img.src = m.image;
-        img.alt = "Memory image";
-        img.onclick = e => {
-          e.stopPropagation();
-          openLightbox(m.image);
-        };
-        div.appendChild(img);
-      }
+      div.textContent = m.text;
       container.appendChild(div);
     });
   }
@@ -163,35 +121,31 @@
         alert("No memories found yet. Please add some!");
         return;
       }
+
       if (!encryptedData.trim()) {
         alert("No memories found yet. Please add some!");
         return;
       }
+
       const password = prompt("Enter password:");
       if (!password) return;
+
       const bytes = CryptoJS.AES.decrypt(encryptedData, password);
       const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+
       if (!decryptedStr) {
         alert("Wrong password or corrupted file.");
         return;
       }
+
       allMemories = JSON.parse(decryptedStr);
       currentDisplayed = pickRandomMemories(allMemories, 9);
       renderMemories(currentDisplayed);
+
     } catch (err) {
       alert("Error loading memories.");
       console.error(err);
     }
-  }
-
-  function openLightbox(src) {
-    const overlay = document.getElementById('lightboxOverlay');
-    const lightboxImg = document.getElementById('lightboxImage');
-    lightboxImg.src = src;
-    overlay.style.display = 'flex';
-  }
-  function closeLightbox() {
-    document.getElementById('lightboxOverlay').style.display = 'none';
   }
 
   document.getElementById('scrambleBtn').addEventListener('click', () => {
@@ -199,14 +153,13 @@
     currentDisplayed = pickRandomMemories(allMemories, 9);
     renderMemories(currentDisplayed);
   });
+
   document.getElementById('addMemoryBtn').addEventListener('click', () => {
     window.location.href = 'add-memory.html';
-  });
-  document.getElementById('viewAllBtn').addEventListener('click', () => {
-    window.location.href = 'manage-memories.html';
   });
 
   loadMemories();
 </script>
+
 </body>
 </html>

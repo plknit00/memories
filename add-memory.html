@@ -2,74 +2,61 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Add Memories</title>
   <style>
     body {
-      font-family: "Segoe UI", sans-serif;
-      background-color: #fef8e4;
-      color: #333;
-      text-align: center;
+      font-family: Arial, sans-serif;
+      background: #99f0ff;
       margin: 20px;
+      padding: 0 20px 40px 20px;
     }
-
     textarea, input {
-      width: 80%;
+      width: 100%;
       padding: 10px;
-      margin: 8px 0;
-      border-radius: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
       border: 1px solid #ccc;
+      font-size: 1rem;
     }
-
     button {
-      background-color: #ffca28;
+      padding: 12px 24px;
+      font-size: 1rem;
+      background-color: #028ea8;
       border: none;
-      color: #333;
-      padding: 10px 18px;
-      margin: 6px;
-      border-radius: 10px;
-      font-size: 15px;
+      border-radius: 6px;
+      color: white;
       cursor: pointer;
-      transition: background-color 0.2s ease;
+      box-shadow: 1px 2px 4px rgba(0,0,0,0.3);
+      transition: background-color 0.3s ease;
+      margin: 4px;
     }
-
     button:hover {
-      background-color: #ffd54f;
+      background-color: #004e5c;
     }
-
     #output {
       margin-top: 20px;
       white-space: pre-wrap;
-      word-break: break-all;
-      background-color: #fff;
-      border: 1px solid #ddd;
+      word-break: break-word;
+      background-color: #fff8dc;
       padding: 15px;
-      border-radius: 10px;
+      border-radius: 8px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
     }
-
-    .nav-btn {
-      background-color: #ffca28;
-      border: none;
-      color: #333;
-      padding: 10px 18px;
-      margin: 4px;
-      border-radius: 10px;
-      font-size: 15px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
-
-    .nav-btn:hover {
-      background-color: #ffd54f;
+    /* Nav buttons container */
+    #navButtons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 20px;
     }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body>
 
-  <div style="margin-bottom: 20px;">
-    <button onclick="window.location.href='index.html'" class="nav-btn">🏠 Back to Main</button>
-    <button onclick="window.location.href='manage-memories.html'" class="nav-btn">🗂️ View All Memories</button>
+  <div id="navButtons">
+    <button onclick="window.location.href='index.html'">Back to Main</button>
+    <button onclick="window.location.href='manage-memories.html'">View All Memories</button>
   </div>
 
   <h2>Add Memories</h2>
@@ -92,27 +79,26 @@
 
     async function encryptMemories() {
       const password = document.getElementById("password").value.trim();
-      const memoryLines = document.getElementById("memories").value.trim().split("\n").filter(x => x);
-      const imageLines = document.getElementById("images").value.trim().split("\n").filter(x => x);
+      const memoryLines = document.getElementById("memories").value.trim().split("\n").filter(x=>x);
+      const imageLines = document.getElementById("images").value.trim().split("\n").filter(x=>x);
 
       if (!password || memoryLines.length === 0) {
         alert("Please enter a password and at least one memory.");
         return;
       }
 
-      const response = await fetch("memories.txt");
-      const text = await response.text();
       let memories = [];
-
-      if (text.startsWith("U2Fsd")) {
-        try {
-          const bytes = CryptoJS.AES.decrypt(text, password);
-          const decrypted = bytes.toString(CryptoJS.enc.Utf8);
-          if (decrypted) {
-            memories = JSON.parse(decrypted);
+      try {
+        const res = await fetch("memories.txt");
+        if (res.ok) {
+          const text = await res.text();
+          if (text.startsWith("U2Fsd")) {
+            const bytes = CryptoJS.AES.decrypt(text, password);
+            const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+            if (decrypted) memories = JSON.parse(decrypted);
           }
-        } catch {}
-      }
+        }
+      } catch {}
 
       memoryLines.forEach((m, i) => {
         memories.push({ text: m, image: imageLines[i] || "" });
@@ -128,5 +114,6 @@
       alert("Copied to clipboard!");
     }
   </script>
+
 </body>
 </html>

@@ -1,187 +1,132 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Add Memories</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 40px auto;
-      background: #ccf5fc;
-      padding: 20px;
+      font-family: "Segoe UI", sans-serif;
+      background-color: #fef8e4;
+      color: #333;
+      text-align: center;
+      margin: 20px;
+    }
+
+    textarea, input {
+      width: 80%;
+      padding: 10px;
+      margin: 8px 0;
       border-radius: 10px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.2);
-    }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
-    }
-    textarea, input[type="text"], input[type="password"] {
-      width: 100%;
-      padding: 8px;
-      margin-top: 6px;
-      border-radius: 6px;
       border: 1px solid #ccc;
-      font-size: 1rem;
-      box-sizing: border-box;
-      font-family: inherit;
     }
+
     button {
-      margin-top: 20px;
-      padding: 12px 20px;
-      font-size: 1rem;
+      background-color: #ffca28;
       border: none;
-      border-radius: 8px;
-      background-color: #028ea8;
-      color: white;
+      color: #333;
+      padding: 10px 18px;
+      margin: 6px;
+      border-radius: 10px;
+      font-size: 15px;
       cursor: pointer;
-      box-shadow: 1px 2px 6px rgba(0,0,0,0.2);
-      transition: background-color 0.3s ease;
+      transition: background-color 0.2s ease;
     }
+
     button:hover {
-      background-color: #004e5c;
+      background-color: #ffd54f;
     }
+
     #output {
       margin-top: 20px;
       white-space: pre-wrap;
-      background: #e7f3e7;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #a5d6a7;
-      font-family: monospace;
-      max-height: 250px;
-      overflow-y: auto;
-      user-select: text;
+      word-break: break-all;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 10px;
     }
-    small {
-      color: #555;
-      font-style: italic;
+
+    .nav-btn {
+      background-color: #ffca28;
+      border: none;
+      color: #333;
+      padding: 10px 18px;
+      margin: 4px;
+      border-radius: 10px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
     }
-    #copyBtn {
-      display: none;
-      margin-top: 8px;
-      background-color: #028ea8;
-    }
-    #copyBtn:hover {
-      background-color: #004e5c;
-    }
-    .checkbox-container {
-      margin-top: 10px;
-      user-select: none;
+
+    .nav-btn:hover {
+      background-color: #ffd54f;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
 </head>
 <body>
 
-<h2>Add Memories (Batch)</h2>
+  <div style="margin-bottom: 20px;">
+    <button onclick="window.location.href='index.html'" class="nav-btn">🏠 Back to Main</button>
+    <button onclick="window.location.href='manage-memories.html'" class="nav-btn">🗂️ View All Memories</button>
+  </div>
 
-<label for="password">Password:</label>
-<input type="password" id="password" placeholder="Enter encryption password" />
-<div class="checkbox-container">
-  <input type="checkbox" id="showPassword" />
-  <label for="showPassword">Show Password</label>
-</div>
+  <h2>Add Memories</h2>
+  <input type="password" id="password" placeholder="Enter password" />
+  <button onclick="togglePassword()">Show Password</button>
+  <br><br>
+  <textarea id="memories" placeholder="Enter memories, one per line"></textarea>
+  <textarea id="images" placeholder="Image URLs (optional, one per line matching memories order)"></textarea>
+  <br>
+  <button onclick="encryptMemories()">Add Memories & Re-encrypt</button>
+  <button onclick="copyToClipboard()">Copy Encrypted String</button>
 
-<label for="memoriesText">Memories (one per line or separated by a blank line):</label>
-<textarea id="memoriesText" rows="8" placeholder="Enter multiple memories here..."></textarea>
+  <div id="output"></div>
 
-<label for="imagesText">Image URLs (optional, one per line matching memories order):</label>
-<textarea id="imagesText" rows="8" placeholder="Enter image URLs here (optional)..."></textarea>
-
-<small>Leave image URLs blank or fewer lines than memories if no image for some.</small>
-
-<button onclick="addMemories()">Add Memories & Re-encrypt</button>
-
-<pre id="output"></pre>
-<button id="copyBtn" onclick="copyToClipboard()">Copy to Clipboard</button>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-<script>
-  // Toggle password visibility
-  document.getElementById('showPassword').addEventListener('change', function() {
-    const pwd = document.getElementById('password');
-    pwd.type = this.checked ? 'text' : 'password';
-  });
-
-  async function addMemories() {
-    const password = document.getElementById('password').value.trim();
-    const memoriesInput = document.getElementById('memoriesText').value.trim();
-    const imagesInput = document.getElementById('imagesText').value.trim();
-    const output = document.getElementById('output');
-    const copyBtn = document.getElementById('copyBtn');
-
-    copyBtn.style.display = 'none';
-    output.textContent = '';
-
-    if (!password) {
-      alert("Password is required.");
-      return;
-    }
-    if (!memoriesInput) {
-      alert("Please enter at least one memory.");
-      return;
+  <script>
+    function togglePassword() {
+      const pwd = document.getElementById("password");
+      pwd.type = pwd.type === "password" ? "text" : "password";
     }
 
-    try {
-      const res = await fetch('memories.txt');
+    async function encryptMemories() {
+      const password = document.getElementById("password").value.trim();
+      const memoryLines = document.getElementById("memories").value.trim().split("\n").filter(x => x);
+      const imageLines = document.getElementById("images").value.trim().split("\n").filter(x => x);
+
+      if (!password || memoryLines.length === 0) {
+        alert("Please enter a password and at least one memory.");
+        return;
+      }
+
+      const response = await fetch("memories.txt");
+      const text = await response.text();
       let memories = [];
 
-      if (res.ok) {
-        const encryptedData = await res.text();
-        if (encryptedData.trim().length > 0) {
-          const bytes = CryptoJS.AES.decrypt(encryptedData, password);
-          const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
-
-          if (!decryptedStr) {
-            alert("Password incorrect or file corrupted.");
-            return;
+      if (text.startsWith("U2Fsd")) {
+        try {
+          const bytes = CryptoJS.AES.decrypt(text, password);
+          const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+          if (decrypted) {
+            memories = JSON.parse(decrypted);
           }
-          memories = JSON.parse(decryptedStr);
-        }
+        } catch {}
       }
 
-      let newMemoriesArr = memoriesInput.split(/\n\s*\n/);
-      if (newMemoriesArr.length === 1) {
-        newMemoriesArr = memoriesInput.split('\n').filter(s => s.trim() !== '');
-      }
+      memoryLines.forEach((m, i) => {
+        memories.push({ text: m, image: imageLines[i] || "" });
+      });
 
-      let imagesArr = [];
-      if (imagesInput) {
-        imagesArr = imagesInput.split('\n').map(s => s.trim());
-      }
-
-      for (let i = 0; i < newMemoriesArr.length; i++) {
-        const text = newMemoriesArr[i].trim();
-        if (!text) continue;
-        const mem = { text };
-        if (imagesArr[i]) {
-          mem.image = imagesArr[i];
-        }
-        memories.push(mem);
-      }
-
-      const newEncrypted = CryptoJS.AES.encrypt(JSON.stringify(memories), password).toString();
-      output.textContent = newEncrypted;
-      copyBtn.style.display = 'inline-block';
-      alert("Memories added! You can now copy the encrypted text into memories.txt");
-
-    } catch (err) {
-      console.error(err);
-      alert("Error decrypting or processing memories.");
+      const encrypted = CryptoJS.AES.encrypt(JSON.stringify(memories), password).toString();
+      document.getElementById("output").textContent = encrypted;
     }
-  }
 
-  function copyToClipboard() {
-    const output = document.getElementById('output');
-    navigator.clipboard.writeText(output.textContent).then(() => {
-      alert("Encrypted text copied to clipboard!");
-    }).catch(() => {
-      alert("Failed to copy. Please copy manually.");
-    });
-  }
-</script>
-
+    function copyToClipboard() {
+      const output = document.getElementById("output").textContent;
+      navigator.clipboard.writeText(output);
+      alert("Copied to clipboard!");
+    }
+  </script>
 </body>
 </html>

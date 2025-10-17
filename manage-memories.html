@@ -2,156 +2,132 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manage Memories</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #99f0ff;
-      padding: 20px;
-    }
-    h1 {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #fef8e4;
+      color: #333;
       text-align: center;
-      color: #004e5c;
+      margin: 20px;
     }
-    #memoriesList {
+
+    .memory-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 15px;
-      max-width: 1000px;
-      margin: 20px auto;
-    }
-    .memory {
-      background: #fff8dc;
       padding: 10px;
+    }
+
+    .memory {
+      background-color: #fff8dc;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    .delete-btn {
+      background-color: #ff6f61;
+      border: none;
+      color: white;
+      padding: 6px 10px;
       border-radius: 8px;
-      box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      word-wrap: break-word;
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
     }
-    .memory img {
+
+    .delete-btn:hover {
+      background-color: #ff8a80;
+    }
+
+    img {
       max-width: 100%;
-      border-radius: 6px;
+      border-radius: 10px;
       margin-top: 8px;
     }
-    .deleteBtn {
-      background-color: #c70000;
-      color: white;
+
+    .nav-btn {
+      background-color: #ffca28;
       border: none;
-      padding: 6px 12px;
-      margin-top: 8px;
-      border-radius: 4px;
+      color: #333;
+      padding: 10px 18px;
+      margin: 4px;
+      border-radius: 10px;
+      font-size: 15px;
       cursor: pointer;
+      transition: background-color 0.2s ease;
     }
-    .deleteBtn:hover {
-      background-color: #ff4444;
-    }
-    #saveBtn {
-      display: block;
-      margin: 20px auto;
-      padding: 12px 24px;
-      background-color: #028ea8;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    #saveBtn:hover {
-      background-color: #004e5c;
-    }
-    #outputContainer {
-      max-width: 800px;
-      margin: 30px auto;
-      display: none;
-      text-align: center;
-    }
-    #encryptedOutput {
-      width: 100%;
-      height: 150px;
+
+    .nav-btn:hover {
+      background-color: #ffd54f;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/crypto-js@4.1.1/crypto-js.js"></script>
 </head>
 <body>
 
-<h1>Manage Memories</h1>
-<div id="memoriesList"></div>
-<button id="saveBtn">Save Changes</button>
+  <div style="margin-bottom: 20px;">
+    <button onclick="window.location.href='index.html'" class="nav-btn">🏠 Back to Main</button>
+    <button onclick="window.location.href='add-memory.html'" class="nav-btn">➕ Add Memory</button>
+  </div>
 
-<div id="outputContainer">
-  <p>Copy this encrypted string and replace <b>memories.txt</b> with it:</p>
-  <textarea id="encryptedOutput" readonly></textarea><br><br>
-  <button id="copyBtn">Copy to Clipboard</button>
-</div>
+  <h2>View and Delete Memories</h2>
+  <input type="password" id="password" placeholder="Enter password" />
+  <button onclick="loadMemories()">Unlock Memories</button>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-<script>
-  let memories = [];
-  let password = '';
+  <div id="memoriesContainer" class="memory-grid"></div>
 
-  async function loadMemories() {
-    const res = await fetch('memories.txt');
-    const text = await res.text();
-    password = prompt("Enter password to manage memories:");
-    if (!password) return;
-    const bytes = CryptoJS.AES.decrypt(text, password);
-    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
-    if (!decrypted) {
-      alert("Wrong password or corrupted file.");
-      return;
-    }
-    memories = JSON.parse(decrypted);
-    renderMemories();
-  }
+  <div id="output" style="margin-top:20px;"></div>
 
-  function renderMemories() {
-    const list = document.getElementById('memoriesList');
-    list.innerHTML = '';
-    memories.forEach((m, index) => {
-      const div = document.createElement('div');
-      div.className = 'memory';
-      const textDiv = document.createElement('div');
-      textDiv.textContent = m.text;
-      div.appendChild(textDiv);
-      if (m.image) {
-        const img = document.createElement('img');
-        img.src = m.image;
-        img.alt = 'Memory image';
-        div.appendChild(img);
+  <script>
+    let allMemories = [];
+
+    async function loadMemories() {
+      const password = document.getElementById("password").value.trim();
+      const response = await fetch("memories.txt");
+      const text = await response.text();
+
+      try {
+        const bytes = CryptoJS.AES.decrypt(text, password);
+        const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+        if (!decrypted) throw new Error("Bad password or corrupt data");
+        allMemories = JSON.parse(decrypted);
+        renderMemories(password);
+      } catch {
+        alert("Incorrect password or corrupted data.");
       }
-      const del = document.createElement('button');
-      del.textContent = 'Delete';
-      del.className = 'deleteBtn';
-      del.onclick = () => {
-        if (confirm('Delete this memory?')) {
-          memories.splice(index, 1);
-          renderMemories();
-        }
-      };
-      div.appendChild(del);
-      list.appendChild(div);
-    });
-  }
+    }
 
-  document.getElementById('saveBtn').addEventListener('click', () => {
-    const encrypted = CryptoJS.AES.encrypt(JSON.stringify(memories), password).toString();
-    const outBox = document.getElementById('outputContainer');
-    const textArea = document.getElementById('encryptedOutput');
-    textArea.value = encrypted;
-    outBox.style.display = 'block';
-  });
+    function renderMemories(password) {
+      const container = document.getElementById("memoriesContainer");
+      container.innerHTML = "";
 
-  document.getElementById('copyBtn').addEventListener('click', () => {
-    const ta = document.getElementById('encryptedOutput');
-    ta.select();
-    document.execCommand('copy');
-    alert('Copied to clipboard!');
-  });
+      allMemories.forEach((m, i) => {
+        const div = document.createElement("div");
+        div.className = "memory";
+        div.innerHTML = `
+          <button class="delete-btn" onclick="deleteMemory(${i}, '${password}')">Delete</button>
+          <p>${m.text}</p>
+          ${m.image ? `<img src="${m.image}" alt="Memory image">` : ""}
+        `;
+        container.appendChild(div);
+      });
+    }
 
-  loadMemories();
-</script>
-
+    function deleteMemory(index, password) {
+      if (!confirm("Delete this memory?")) return;
+      allMemories.splice(index, 1);
+      const encrypted = CryptoJS.AES.encrypt(JSON.stringify(allMemories), password).toString();
+      document.getElementById("output").textContent = encrypted;
+      renderMemories(password);
+      alert("Memory deleted locally. Copy and replace in memories.txt to save.");
+    }
+  </script>
 </body>
 </html>

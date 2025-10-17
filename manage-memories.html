@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Manage Memories</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #99f0ff;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #004e5c;
+    }
+    #memoriesList {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 15px;
+      max-width: 1000px;
+      margin: 20px auto;
+    }
+    .memory {
+      background: #fff8dc;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      word-wrap: break-word;
+    }
+    .memory img {
+      max-width: 100%;
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+    .deleteBtn {
+      background-color: #c70000;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      margin-top: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .deleteBtn:hover {
+      background-color: #ff4444;
+    }
+    #saveBtn {
+      display: block;
+      margin: 20px auto;
+      padding: 12px 24px;
+      background-color: #028ea8;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    #saveBtn:hover {
+      background-color: #004e5c;
+    }
+    #outputContainer {
+      max-width: 800px;
+      margin: 30px auto;
+      display: none;
+      text-align: center;
+    }
+    #encryptedOutput {
+      width: 100%;
+      height: 150px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Manage Memories</h1>
+<div id="memoriesList"></div>
+<button id="saveBtn">Save Changes</button>
+
+<div id="outputContainer">
+  <p>Copy this encrypted string and replace <b>memories.txt</b> with it:</p>
+  <textarea id="encryptedOutput" readonly></textarea><br><br>
+  <button id="copyBtn">Copy to Clipboard</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+<script>
+  let memories = [];
+  let password = '';
+
+  async function loadMemories() {
+    const res = await fetch('memories.txt');
+    const text = await res.text();
+    password = prompt("Enter password to manage memories:");
+    if (!password) return;
+    const bytes = CryptoJS.AES.decrypt(text, password);
+    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+    if (!decrypted) {
+      alert("Wrong password or corrupted file.");
+      return;
+    }
+    memories = JSON.parse(decrypted);
+    renderMemories();
+  }
+
+  function renderMemories() {
+    const list = document.getElementById('memoriesList');
+    list.innerHTML = '';
+    memories.forEach((m, index) => {
+      const div = document.createElement('div');
+      div.className = 'memory';
+      const textDiv = document.createElement('div');
+      textDiv.textContent = m.text;
+      div.appendChild(textDiv);
+      if (m.image) {
+        const img = document.createElement('img');
+        img.src = m.image;
+        img.alt = 'Memory image';
+        div.appendChild(img);
+      }
+      const del = document.createElement('button');
+      del.textContent = 'Delete';
+      del.className = 'deleteBtn';
+      del.onclick = () => {
+        if (confirm('Delete this memory?')) {
+          memories.splice(index, 1);
+          renderMemories();
+        }
+      };
+      div.appendChild(del);
+      list.appendChild(div);
+    });
+  }
+
+  document.getElementById('saveBtn').addEventListener('click', () => {
+    const encrypted = CryptoJS.AES.encrypt(JSON.stringify(memories), password).toString();
+    const outBox = document.getElementById('outputContainer');
+    const textArea = document.getElementById('encryptedOutput');
+    textArea.value = encrypted;
+    outBox.style.display = 'block';
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    const ta = document.getElementById('encryptedOutput');
+    ta.select();
+    document.execCommand('copy');
+    alert('Copied to clipboard!');
+  });
+
+  loadMemories();
+</script>
+
+</body>
+</html>

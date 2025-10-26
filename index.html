@@ -176,7 +176,7 @@
         return;
       }
       allMemories = JSON.parse(decryptedStr);
-      currentDisplayed = pickRandomMemories(allMemories, 9);
+      currentDisplayed = pickRandomMemories(allMemories, 8);
       renderMemories(currentDisplayed);
     } catch (err) {
       alert("Error loading memories.");
@@ -195,8 +195,8 @@
   }
 
   document.getElementById('scrambleBtn').addEventListener('click', () => {
-    if (allMemories.length <= 9) return;
-    currentDisplayed = pickRandomMemories(allMemories, 9);
+    if (allMemories.length <= 8) return;
+    currentDisplayed = pickRandomMemories(allMemories, 8);
     renderMemories(currentDisplayed);
   });
   document.getElementById('addMemoryBtn').addEventListener('click', () => {

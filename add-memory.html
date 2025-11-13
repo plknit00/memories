@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Add Memories</title>
@@ -77,6 +77,7 @@
 <div style="text-align:center; margin-bottom: 20px;">
   <button onclick="window.location.href='index.html'" style="background-color:#028ea8; color:white; border:none; padding:10px 18px; border-radius:6px; cursor:pointer;">Back to Main</button>
 </div>
+
 <h2>Add Memories (Batch)</h2>
 
 <label for="password">Password:</label>
@@ -88,11 +89,6 @@
 
 <label for="memoriesText">Memories (one per line or separated by a blank line):</label>
 <textarea id="memoriesText" rows="8" placeholder="Enter multiple memories here..."></textarea>
-
-<label for="imagesText">Image URLs (optional, one per line matching memories order):</label>
-<textarea id="imagesText" rows="8" placeholder="Enter image URLs here (optional)..."></textarea>
-
-<small>Leave image URLs blank or fewer lines than memories if no image for some.</small>
 
 <button onclick="addMemories()">Add Memories & Re-encrypt</button>
 
@@ -110,7 +106,6 @@
   async function addMemories() {
     const password = document.getElementById('password').value.trim();
     const memoriesInput = document.getElementById('memoriesText').value.trim();
-    const imagesInput = document.getElementById('imagesText').value.trim();
     const output = document.getElementById('output');
     const copyBtn = document.getElementById('copyBtn');
 
@@ -149,19 +144,9 @@
         newMemoriesArr = memoriesInput.split('\n').filter(s => s.trim() !== '');
       }
 
-      let imagesArr = [];
-      if (imagesInput) {
-        imagesArr = imagesInput.split('\n').map(s => s.trim());
-      }
-
-      for (let i = 0; i < newMemoriesArr.length; i++) {
-        const text = newMemoriesArr[i].trim();
-        if (!text) continue;
-        const mem = { text };
-        if (imagesArr[i]) {
-          mem.image = imagesArr[i];
-        }
-        memories.push(mem);
+      for (let text of newMemoriesArr) {
+        text = text.trim();
+        if (text) memories.push({ text });
       }
 
       const newEncrypted = CryptoJS.AES.encrypt(JSON.stringify(memories), password).toString();

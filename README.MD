@@ -4,7 +4,6 @@ A private, password-protected, and encrypted webpage for sharing and preserving 
 
 ## Overview
 This site serves as a secure digital scrapbook where only authorized users can view or add memories.  
-All shared content — including text entries and images — is encrypted and stored safely.
 
 Access the site here: [plknit00.github.io/memories](https://plknit00.github.io/memories)
 
